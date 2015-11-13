@@ -1,0 +1,270 @@
+//
+//  DengluViewController.m
+//  Test-denglu
+//
+//  Created by lanye on 13-11-26.
+//  Copyright (c) 2013年 lanye. All rights reserved.
+//
+
+#import "DengluViewController.h"
+#import "LHYHTTPRequest.h"
+#import "AppDelegate.h"
+
+#define HTTP_URL @"http://www.guyizu.com/member.php?act=login_in&meth=login"
+
+@interface DengluViewController ()
+
+@end
+
+@implementation DengluViewController
+@synthesize userview = _userview;
+@synthesize passwordview = _passwordview;
+@synthesize zhucebutton = _zhucebutton;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    _iszixun=NO;
+    isZidongLogin = YES;
+    _isshoucang=NO;
+    _isdianping=NO;
+    AppDelegate *homeApp = (AppDelegate *)[UIApplication sharedApplication].delegate;
+    if (homeApp.isIos6) {
+        
+        [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"123.png"] forBarMetrics:UIBarMetricsDefault];
+
+    }else{
+
+        [self.navigationController.navigationBar setBackgroundImage:[UIImage imageNamed:@"111"] forBarMetrics:UIBarMetricsDefault];
+    }
+    
+    
+    //构建上面tabBar
+    UIButton *leftbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [leftbutton setBackgroundImage:[UIImage imageNamed:@"return.png"] forState:UIControlStateNormal];
+    leftbutton.frame = CGRectMake(0, 0, 11, 20);
+    [leftbutton addTarget:self action:@selector(mleftBarBttonClick) forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithCustomView:leftbutton];
+    UILabel *customLab = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 100, 30)];
+    customLab.backgroundColor = [UIColor clearColor];
+    [customLab setTextColor:[UIColor whiteColor]];
+    [customLab setText:@"用户登陆"];
+    [customLab setTextAlignment:NSTextAlignmentCenter];
+    customLab.font = [UIFont boldSystemFontOfSize:20];
+    self.navigationItem.titleView = customLab;
+    
+    
+
+    _userview.layer.borderWidth = 0.4f;
+    _userview.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    
+    _passwordview.layer.borderWidth = 0.4f;
+    _passwordview.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    
+    usertext = [[UITextField alloc] initWithFrame:CGRectMake(63.6f, 51.0f, 236.0f, 44.0f)];
+    [usertext setBorderStyle:UITextBorderStyleNone]; //外框类型
+    usertext.layer.borderWidth = 0.4f;
+    usertext.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;//字体垂直居中对齐
+    usertext.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    usertext.font = [UIFont systemFontOfSize:13.0];
+    usertext.placeholder = @" 可使用用户名/邮箱/手机号码登录"; //默认显示的字
+    usertext.backgroundColor = [UIColor whiteColor];
+    usertext.delegate = self;
+
+    UIView *userview = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 5, 5)];
+    usertext.leftView = userview;
+    usertext.leftViewMode = UITextFieldViewModeAlways;
+    [self.view addSubview:usertext];
+    
+    
+    UIView *backview = [[UIView alloc]initWithFrame:CGRectMake(20, 125, 280, 44)];
+    [backview setBackgroundColor:[UIColor whiteColor]];
+    backview.layer.borderWidth = 0.4f;
+    backview.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    [self.view addSubview:backview];
+    
+    UIImageView *passwordimage = [[UIImageView alloc]initWithFrame:CGRectMake(17, 14, 11, 15)];
+    passwordimage.image = [UIImage imageNamed:@"member_password.png"];
+    [backview addSubview:passwordimage];
+    
+    UIView *fengeview = [[UIView alloc]initWithFrame:CGRectMake(43, 0, 2, 44)];
+    [fengeview setBackgroundColor:[UIColor lightGrayColor]];
+    [backview addSubview:fengeview];
+    
+    passwordtext = [[UITextField alloc] initWithFrame:CGRectMake(63.6f, 126.0f, 156.0f, 42.0f)];
+    [passwordtext setBorderStyle:UITextBorderStyleNone]; //外框类型
+    passwordtext.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;// 字体垂直居中对齐
+    passwordtext.font = [UIFont systemFontOfSize:13.0];
+    passwordtext.placeholder = @" 请输入您的密码"; //默认显示的字
+    passwordtext.backgroundColor = [UIColor whiteColor];
+    passwordtext.delegate = self;
+    passwordtext.secureTextEntry = YES;
+    
+    UIView *passview = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 5, 5)];
+    passwordtext.leftView = passview;
+    passwordtext.leftViewMode = UITextFieldViewModeAlways;
+    
+    [self.view addSubview:passwordtext];
+    
+    UIButton *mimabutton = [[UIButton alloc]initWithFrame:CGRectMake(200.0, 1, 80, 42)];
+    [mimabutton setTitle:@"忘记密码？" forState:UIControlStateNormal];
+    [mimabutton setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+    mimabutton.titleLabel.font = [UIFont systemFontOfSize: 12.0];
+    [mimabutton setBackgroundColor:[UIColor whiteColor]];
+    
+    [mimabutton addTarget:self action:@selector(mima) forControlEvents:UIControlEventTouchDown];
+    [backview addSubview:mimabutton];
+    
+    
+    _zhucebutton.layer.borderWidth = 0.4f;
+    _zhucebutton.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    
+    
+    //remeberPassword
+    NSDictionary *mDic = [[NSUserDefaults standardUserDefaults]objectForKey:@"rememberPassword"];
+    if (mDic && mDic != nil) {
+        NSString *strU = [mDic objectForKey:@"username"];
+        NSString *strP = [mDic objectForKey:@"password"];
+        
+        usertext.text = strU;
+        passwordtext.text = strP;
+    }
+
+    
+}
+-(void)mima
+{
+    
+    MimaViewController *mima = [[MimaViewController alloc]init];
+    [self.navigationController pushViewController:mima animated:YES];
+}
+
+-(IBAction)zhuce:(id)sender
+{
+   
+    
+    ZhuceViewController *zhuce = [[ZhuceViewController alloc]init];
+    [self.navigationController pushViewController:zhuce animated:YES];
+    
+}
+
+- (IBAction)denglu:(id)sender {
+    
+    if ([usertext.text isEqualToString:@""]) {
+        self.userlable.hidden = NO;
+    }else{
+        self.userlable.hidden = YES;
+    }
+    
+    
+    if([passwordtext.text isEqualToString:@""]){
+    
+        self.passwordlable.hidden = NO;
+    }else{
+        self.passwordlable.hidden = YES;
+    }
+    
+    
+    if ((![usertext.text isEqualToString:@""]) && (![passwordtext.text isEqualToString:@""])) {
+        //lihongyang
+        NSString *username = [NSString stringWithFormat:@"&username=%@",usertext.text];
+        NSString *passworld = [NSString stringWithFormat:@"&password=%@",passwordtext.text];
+        NSString *str = [HTTP_URL stringByAppendingFormat:@"%@%@",username, passworld];
+        
+        NSLog(@"str=%@",str);
+        
+
+        LHYHTTPRequest *lhyRequest = [[LHYHTTPRequest alloc]initWith:str];
+        lhyRequest.delegate = self;
+    }
+    
+}
+
+#pragma mark -
+
+-(void)mleftBarBttonClick{
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+-(void)returnJsonDic:(id)send And:(id)mLHYHTTPRequest{
+
+    NSNumber *nuber = [send objectForKey:@"status"];
+    
+    if ([nuber boolValue] == 1) {
+        //如果成功取得uid
+        NSString *uidStr = [[send objectForKey:@"data"] objectForKey:@"uid"];
+        
+        //储存登陆信息
+        [[NSUserDefaults standardUserDefaults] setObject:uidStr forKey:@"uid"];
+        [[NSUserDefaults standardUserDefaults] setBool: YES forKey:@"islogin"];
+        
+        //是否记住密码
+        if (isZidongLogin) {
+            NSDictionary *mDic = [NSDictionary dictionaryWithObjectsAndKeys: usertext.text, @"username", passwordtext.text, @"password", nil];
+            [[NSUserDefaults standardUserDefaults] setObject:mDic forKey:@"rememberPassword"];
+            
+        }else{
+            [[NSUserDefaults standardUserDefaults] setObject:nil forKey:@"rememberPassword"];
+        }
+        
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        [self dismissViewControllerAnimated:YES completion:nil];
+        
+        
+    }else{
+        NSMutableString *str = [send objectForKey:@"msg"];
+        
+        UIAlertView *alert = [[UIAlertView alloc]initWithTitle:str message:nil delegate:self cancelButtonTitle:@"确定" otherButtonTitles: nil];
+        [alert show];
+    }
+    if(_iszixun==YES || _isshoucang==YES || _isdianping==YES)
+    {
+        [self dismissViewControllerAnimated:YES completion:Nil];
+    }
+}
+
+#pragma mark -
+
+- (IBAction)delekeyboard:(id)sender {
+    [usertext resignFirstResponder];
+    [passwordtext resignFirstResponder];
+}
+
+
+- (IBAction)zidongLogin:(id)sender {
+    isZidongLogin = !isZidongLogin;
+    UIButton *button = (UIButton *)sender;
+    if (isZidongLogin) {
+        [button setTitle:@"已选择记住密码" forState:UIControlStateNormal];
+        
+    }else{
+        [button setTitle:@"已关闭记住密码" forState:UIControlStateNormal];
+    }
+    
+}
+
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    [usertext resignFirstResponder];
+    [passwordtext resignFirstResponder];
+    return YES;
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

@@ -1,0 +1,29 @@
+//
+//  cell.m
+//  Test
+//
+//  Created by lanye on 13-11-25.
+//  Copyright (c) 2013年 lanye. All rights reserved.
+//
+
+#import "cell.h"
+
+@implementation cell
+
+- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self) {
+        // Initialization code
+    }
+    return self;
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

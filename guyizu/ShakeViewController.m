@@ -1,0 +1,118 @@
+//
+//  ShakeViewController.m
+//  guyizu
+//
+//  Created by lanyes on 12/3/13.
+//  Copyright (c) 2013 蓝叶软件. All rights reserved.
+//
+
+#import "ShakeViewController.h"
+
+@interface ShakeViewController ()
+
+@end
+
+@implementation ShakeViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        _sharkNub = 3;
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    
+    //构建nav
+    UIButton *leftbutton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [leftbutton setBackgroundImage:[UIImage imageNamed:@"return.png"] forState:UIControlStateNormal];
+    leftbutton.frame = CGRectMake(0, 0, 11, 20);
+    [leftbutton addTarget:self action:@selector(mleftBarBttonClick) forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithCustomView:leftbutton];
+    
+    
+    //blackView
+    _blackView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 320, self.view.frame.size.height)];
+    _blackView.backgroundColor = [UIColor blackColor];
+    _blackView.alpha = 0.0f;
+    [self.view addSubview:_blackView];
+    
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"shake_sound_male" ofType:@"wav"];
+	AudioServicesCreateSystemSoundID((__bridge CFURLRef)[NSURL fileURLWithPath:path], &_soundID);
+    _soundID = 1311;
+    AudioServicesPlaySystemSound(_soundID);
+    [[UIApplication sharedApplication ] setApplicationSupportsShakeToEdit:YES];
+    [self becomeFirstResponder];
+    
+    
+}
+
+#pragma mark -
+#pragma mark leftButtonClick
+
+-(void)mleftBarBttonClick{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+#pragma mark -
+
+-(void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event{
+    
+    if (_imageView == nil && _sharkNub) {
+        [self mstartAnimation];
+    }
+}
+
+-(void)mstartAnimation{
+    [self littleImageViewInit];
+    
+    _blackView.alpha = 0.6f;
+    [UIView animateWithDuration:0.5 animations:^(void){
+        [_imageView setFrame:CGRectMake(39, 50, _imageView.frame.size.width, _imageView.frame.size.height)];
+    }completion:^(BOOL fnished){
+        if (_sharkNub) {
+            _sharkNub --;
+        }
+        self.numberLabel.text = [NSString stringWithFormat:@"%d",_sharkNub];
+    }];
+    AudioServicesPlaySystemSound(_soundID);
+}
+
+-(void)littleImageViewInit{
+    //462 -326
+    _imageView = [[UIImageView alloc]initWithFrame:CGRectMake(39, -326, 242, 326)];
+    [_imageView setImage:[UIImage imageNamed:@"yaoyiyao_smallView"]];
+    _imageView.userInteractionEnabled = YES;
+    [self.view addSubview:_imageView];
+    
+    //button
+    UIButton *closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [closeButton setImage:[UIImage imageNamed:@"yaoyiyao_close"] forState:UIControlStateNormal];
+    closeButton.frame = CGRectMake(207, 35, 22, 22);
+    [closeButton addTarget:self action:@selector(closeButonClick) forControlEvents:UIControlEventTouchUpInside];
+    [_imageView addSubview:closeButton];
+    
+}
+
+-(void)closeButonClick{
+    _blackView.alpha = 0.0f;
+    [_imageView removeFromSuperview];
+    _imageView = nil;
+}
+
+#pragma mark -
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end
